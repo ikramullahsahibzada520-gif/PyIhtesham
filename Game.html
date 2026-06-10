@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tic Tac Toe - Ihtesham Sahibzada</title>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --panel: #121b31;
+      --line: rgba(255,255,255,0.18);
+      --text: rgba(255,255,255,0.92);
+      --muted: rgba(255,255,255,0.65);
+      --accent: #7c5cff;
+      --btn: rgba(255,255,255,0.08);
+      --btnHover: rgba(255,255,255,0.14);
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(1200px 600px at 10% 10%, rgba(124,92,255,0.35), transparent 60%),
+                  radial-gradient(900px 500px at 90% 30%, rgba(0,210,255,0.18), transparent 55%),
+                  var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 18px;
+    }
+
+    .app {
+      width: min(560px, 100%);
+      background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 20px 80px rgba(0,0,0,0.35);
+    }
+
+    header {
+      padding: 16px 16px 12px;
+      background: rgba(0,0,0,0.12);
+      border-bottom: 1px solid rgba(255,255,255,0.10);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 14px;
+      align-items: baseline;
+      justify-content: space-between;
+    }
+
+    .title {
+      font-weight: 800;
+      letter-spacing: 0.2px;
+      font-size: 18px;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .content {
+      padding: 16px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .topbar {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    .status {
+      font-size: 14px;
+      color: var(--muted);
+    }
+    .status b { color: var(--text); }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      border: 1px solid rgba(255,255,255,0.12);
+      background: var(--btn);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 650;
+      transition: transform 0.05s ease, background 0.15s ease;
+      user-select: none;
+    }
+    button:hover { background: var(--btnHover); }
+    button:active { transform: translateY(1px); }
+
+    .board-wrap {
+      display: grid;
+      place-items: center;
+      padding: 10px 0 6px;
+    }
+
+    .board {
+      width: min(420px, 92vw);
+      aspect-ratio: 1 / 1;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0;
+      border-radius: 16px;
+      overflow: hidden;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.10);
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,0.15);
+    }
+
+    .cell {
+      display: grid;
+      place-items: center;
+      font-size: clamp(36px, 7vw, 64px);
+      font-weight: 900;
+      cursor: pointer;
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      background: rgba(0,0,0,0.08);
+      transition: background 0.12s ease;
+    }
+
+    .cell:nth-child(3n) { border-right: 0; }
+    .cell:nth-child(n+7) { border-bottom: 0; }
+
+    .cell:hover { background: rgba(255,255,255,0.06); }
+
+    .cell.disabled {
+      cursor: not-allowed;
+      background: rgba(0,0,0,0.12);
+    }
+
+    .x { color: #a9ff68; text-shadow: 0 0 18px rgba(169,255,104,0.22); }
+    .o { color: #62c7ff; text-shadow: 0 0 18px rgba(98,199,255,0.22); }
+
+    .footer {
+      padding: 12px 16px 16px;
+      color: var(--muted);
+      font-size: 12.5px;
+      border-top: 1px solid rgba(255,255,255,0.10);
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    /* Simple modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+    }
+    .modal-backdrop.show { display: flex; }
+
+    .modal {
+      width: min(420px, 100%);
+      background: rgba(18,27,49,0.98);
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 30px 120px rgba(0,0,0,0.55);
+    }
+    .modal h2 { margin: 0 0 6px; font-size: 18px; }
+    .modal p { margin: 0 0 14px; color: var(--muted); font-size: 14px; line-height: 1.4; }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div>
+        <div class="title">Tic Tac Toe</div>
+        <div class="subtitle">First write by <b>Ihtesham Sahibzada</b></div>
+      </div>
+      <div class="subtitle" id="timeHint">Two players (X & O)</div>
+    </header>
+
+    <div class="content">
+      <div class="topbar">
+        <div class="status" id="statusText">
+          Current turn: <b id="turnText">X</b>
+        </div>
+        <div class="controls">
+          <button id="restartBtn" type="button">Restart</button>
+          <button id="clearScoresBtn" type="button" title="Reset scoreboard">Clear Scores</button>
+        </div>
+      </div>
+
+      <div class="board-wrap">
+        <div class="board" id="board" aria-label="Tic Tac Toe board"></div>
+      </div>
+
+      <div class="status" style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+        <div>Score: <b id="scoreX">X: 0</b> | <b id="scoreO">O: 0</b> | Draw: <b id="scoreD">0</b></div>
+        <div id="hintText" style="color: var(--muted); font-size: 13px;">Tip: Click any empty cell</div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <span>Made with HTML, CSS & JavaScript By Ihtesham Sahibzada</span>
+      <span id="authorLine">© Ihtesham Sahibzada</span>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal">
+      <h2 id="modalTitle">Game Over</h2>
+      <p id="modalBody">Winner: X</p>
+      <div class="modal-actions">
+        <button type="button" id="modalPlayAgainBtn">Play Again</button>
+        <button type="button" id="modalCloseBtn" style="opacity:0.9;">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- Game State ---
+    const boardEl = document.getElementById('board');
+    const turnText = document.getElementById('turnText');
+    const statusText = document.getElementById('statusText');
+
+    const scoreXEl = document.getElementById('scoreX');
+    const scoreOEl = document.getElementById('scoreO');
+    const scoreDEl = document.getElementById('scoreD');
+
+    const restartBtn = document.getElementById('restartBtn');
+    const clearScoresBtn = document.getElementById('clearScoresBtn');
+
+    const modalBackdrop = document.getElementById('modalBackdrop');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalBody = document.getElementById('modalBody');
+    const modalPlayAgainBtn = document.getElementById('modalPlayAgainBtn');
+    const modalCloseBtn = document.getElementById('modalCloseBtn');
+
+    let board = Array(9).fill(null); // 'X', 'O', or null
+    let currentPlayer = 'X';
+    let gameOver = false;
+
+    let scores = { X: 0, O: 0, D: 0 };
+
+    const winningLines = [
+      [0,1,2], [3,4,5], [6,7,8], // rows
+      [0,3,6], [1,4,7], [2,5,8], // cols
+      [0,4,8], [2,4,6]          // diagonals
+    ];
+
+    function renderBoard() {
+      boardEl.innerHTML = '';
+      for (let i = 0; i < 9; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.setAttribute('role', 'button');
+        cell.setAttribute('tabindex', '0');
+        cell.dataset.index = i;
+
+        if (board[i]) {
+          cell.textContent = board[i];
+          cell.classList.add(board[i] === 'X' ? 'x' : 'o');
+        }
+
+        if (gameOver || board[i]) {
+          cell.classList.add('disabled');
+        }
+
+        cell.addEventListener('click', () => handleMove(i));
+        cell.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') handleMove(i);
+        });
+
+        boardEl.appendChild(cell);
+      }
+    }
+
+    function updateTurnUI() {
+      turnText.textContent = currentPlayer;
+      statusText.innerHTML = `Current turn: <b>${currentPlayer}</b>`;
+    }
+
+    function checkWinner(b) {
+      for (const [a, c, d] of winningLines) {
+        if (b[a] && b[a] === b[c] && b[a] === b[d]) return b[a];
+      }
+      return null;
+    }
+
+    function isDraw(b) {
+      return b.every(x => x !== null) && !checkWinner(b);
+    }
+
+    function handleMove(index) {
+      if (gameOver) return;
+      if (board[index] !== null) return;
+
+      board[index] = currentPlayer;
+      renderBoard();
+
+      const winner = checkWinner(board);
+      if (winner) {
+        gameOver = true;
+        scores[winner] += 1;
+        updateScores();
+        showModal(`Winner: ${winner}`, `${winner} wins! Press Play Again to continue.`);
+        return;
+      }
+
+      if (isDraw(board)) {
+        gameOver = true;
+        scores.D += 1;
+        updateScores();
+        showModal('Draw!', 'No winner this round. Press Play Again to continue.');
+        return;
+      }
+
+      currentPlayer = (currentPlayer === 'X') ? 'O' : 'X';
+      updateTurnUI();
+    }
+
+    function resetRound() {
+      board = Array(9).fill(null);
+      currentPlayer = 'X';
+      gameOver = false;
+      updateTurnUI();
+      renderBoard();
+    }
+
+    function updateScores() {
+      scoreXEl.textContent = `X: ${scores.X}`;
+      scoreOEl.textContent = `O: ${scores.O}`;
+      scoreDEl.textContent = `${scores.D}`;
+    }
+
+    function showModal(title, body) {
+      modalTitle.textContent = title;
+      modalBody.textContent = body;
+      modalBackdrop.classList.add('show');
+    }
+
+    function hideModal() {
+      modalBackdrop.classList.remove('show');
+    }
+
+    // --- Events ---
+    restartBtn.addEventListener('click', () => {
+      hideModal();
+      resetRound();
+    });
+
+    clearScoresBtn.addEventListener('click', () => {
+      scores = { X: 0, O: 0, D: 0 };
+      updateScores();
+    });
+
+    modalPlayAgainBtn.addEventListener('click', () => {
+      hideModal();
+      resetRound();
+    });
+
+    modalCloseBtn.addEventListener('click', () => hideModal());
+
+    modalBackdrop.addEventListener('click', (e) => {
+      if (e.target === modalBackdrop) hideModal();
+    });
+
+    // --- Init ---
+    updateScores();
+    updateTurnUI();
+    renderBoard();
+  </script>
+</body>
+</html>
